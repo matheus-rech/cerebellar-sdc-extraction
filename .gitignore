@@ -1,0 +1,38 @@
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+
+# Test outputs
+comparison_test_*.json
+test_cerebellar_paper_extraction.json
+marker_output/
+demo_screenshots/
+
+# PDF files (keep schema and test PDF)
+# *.pdf
+# !test_cerebellar_paper.pdf
+
+# Claude cache
+.claude/

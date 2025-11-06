@@ -1,0 +1,2768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerebellar SDC Extraction System - Professional Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+            --yellow: #fbbf24;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .container { 
+            display: grid; 
+            grid-template-columns: 180px 420px 1fr 380px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 2px;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            grid-column: 1 / -1;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .title-section h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 2px;
+        }
+        
+        .title-section .subtitle {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .status-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        /* Thumbnail Sidebar */
+        .thumbnail-sidebar {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            padding: 12px;
+            min-height: 0;
+        }
+        
+        .thumbnail-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .thumbnail-item {
+            margin-bottom: 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .thumbnail-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .thumbnail-item.active {
+            border-color: var(--success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .thumbnail-canvas {
+            width: 100%;
+            display: block;
+            background: white;
+        }
+        
+        .thumbnail-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        /* Left Panel: Extraction Form */
+        .extraction-panel {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        
+        .panel-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .panel-header h2 {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        
+        .panel-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .form-content {
+            padding: 20px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        
+        .field-group {
+            margin-bottom: 20px;
+        }
+        
+        .field-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .field-label label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .extract-btn {
+            padding: 4px 10px;
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .extract-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+        
+        .field-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .field-input.filled {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: var(--success);
+        }
+        
+        textarea.field-input {
+            min-height: 60px;
+            resize: vertical;
+        }
+        
+        .extract-all-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--purple), #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 24px;
+        }
+        
+        .extract-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Center Panel: PDF Viewer */
+        .pdf-panel {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        
+        .pdf-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+            flex-wrap: wrap;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .toolbar-btn:hover:not(:disabled) {
+            background: var(--gray-50);
+            border-color: var(--primary);
+        }
+        
+        .toolbar-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .toolbar-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        #page-num {
+            width: 50px;
+            text-align: center;
+            padding: 6px;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        #zoom-select {
+            padding: 6px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            padding: 0 8px;
+        }
+        
+        #search-input {
+            border: none;
+            padding: 6px;
+            font-size: 12px;
+            outline: none;
+            width: 150px;
+        }
+        
+        .search-nav {
+            display: flex;
+            gap: 4px;
+        }
+        
+        #search-status {
+            font-size: 11px;
+            color: var(--gray-700);
+            padding: 0 8px;
+        }
+        
+        #pdf-viewport {
+            flex: 1;
+            overflow: auto;
+            overflow-x: auto;
+            overflow-y: auto;
+            padding: 20px;
+            background: #525659;
+            position: relative;
+            display: block;
+            text-align: center;
+            min-height: 0;
+        }
+        
+        #pdf-canvas-wrapper {
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: inline-block;
+            text-align: left;
+            margin: 0 auto;
+        }
+        
+        #pdf-canvas {
+            display: block;
+        }
+        
+        /* Text Layer for Selection */
+        .textLayer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            opacity: 0.4;
+            line-height: 1.0;
+            pointer-events: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+        }
+        
+        .textLayer span {
+            color: transparent;
+            position: absolute;
+            white-space: pre;
+            cursor: text;
+            transform-origin: 0% 0%;
+        }
+        
+        .textLayer ::selection {
+            background: rgba(37, 99, 235, 0.5);
+        }
+
+        .textLayer::-moz-selection {
+            background: rgba(37, 99, 235, 0.5);
+        }
+        
+        /* Annotation Layer */
+        .annotationLayer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .highlight {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .highlight.yellow {
+            background: rgba(251, 191, 36, 0.4);
+        }
+        
+        .highlight.green {
+            background: rgba(16, 185, 129, 0.4);
+        }
+        
+        .highlight.pink {
+            background: rgba(236, 72, 153, 0.4);
+        }
+        
+        .highlight.blue {
+            background: rgba(37, 99, 235, 0.4);
+        }
+        
+        .highlight:hover {
+            opacity: 0.7;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+        }
+        
+        .search-highlight {
+            position: absolute;
+            background: rgba(251, 191, 36, 0.5);
+            pointer-events: none;
+        }
+        
+        .search-highlight.current {
+            background: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+        }
+        
+        #upload-area {
+            border: 3px dashed rgba(255,255,255,0.5);
+            border-radius: 16px;
+            padding: 80px 60px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 60px;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        #upload-area:hover {
+            border-color: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.02);
+        }
+        
+        #upload-area h3 {
+            font-size: 20px;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        #upload-area p {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        /* Right Panel: Results */
+        .results-panel {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        
+        .results-content {
+            padding: 20px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        
+        .result-section {
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .stat-card {
+            background: var(--gray-50);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .agent-item {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+        
+        .agent-item.active {
+            border-left-color: var(--warning);
+            animation: agent-pulse 1.5s ease-in-out infinite;
+        }
+        
+        .agent-item.complete {
+            border-left-color: var(--success);
+        }
+        
+        @keyframes agent-pulse {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(2px); }
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .agent-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .agent-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: var(--gray-200);
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .agent-status.working {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .agent-status.complete {
+            background: var(--success);
+            color: white;
+        }
+        
+        .agent-progress-bar {
+            height: 4px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .agent-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--purple));
+            transition: width 0.3s ease;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .confidence-badge.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: #059669;
+        }
+        
+        .confidence-badge.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #d97706;
+        }
+        
+        .confidence-badge.low {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+        
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-700);
+        }
+
+        /* ==================== CITATION UI COMPONENTS ==================== */
+
+        /* Citation Badge */
+        .citation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .citation-badge.high-confidence {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .citation-badge.medium-confidence {
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: white;
+        }
+
+        .citation-badge.low-confidence {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: white;
+        }
+
+        .citation-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Citation Tooltip */
+        .citation-tooltip {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 320px;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateY(-5px);
+        }
+
+        .citation-tooltip.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .citation-tooltip-header {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .citation-tooltip-sections {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .citation-section-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background: var(--gray-100);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        .citation-tooltip-snippet {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.5;
+            padding: 10px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .citation-confidence-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .citation-confidence-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .citation-confidence-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .citation-confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .citation-confidence-fill.high {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .citation-confidence-fill.medium {
+            background: linear-gradient(90deg, var(--primary), #1d4ed8);
+        }
+
+        .citation-confidence-fill.low {
+            background: linear-gradient(90deg, var(--warning), #d97706);
+        }
+
+        .citation-tooltip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .citation-tooltip-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .citation-tooltip-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .citation-tooltip-btn.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .citation-tooltip-btn.secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .citation-tooltip-btn.secondary:hover {
+            background: var(--gray-200);
+        }
+
+        /* Confidence Indicator Bar (below input fields) */
+        .confidence-bar-wrapper {
+            margin-top: 6px;
+            display: none; /* Hidden by default, shown when field has citations */
+        }
+
+        .confidence-bar-wrapper.active {
+            display: block;
+        }
+
+        .confidence-bar {
+            height: 3px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease, background 0.3s ease;
+            border-radius: 2px;
+        }
+
+        /* PDF Highlight Overlay */
+        .pdf-highlight-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .pdf-highlight {
+            position: absolute;
+            background: rgba(37, 99, 235, 0.25);
+            border: 2px solid rgba(37, 99, 235, 0.6);
+            border-radius: 4px;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pdf-highlight:hover {
+            background: rgba(37, 99, 235, 0.35);
+            border-color: rgba(37, 99, 235, 0.8);
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .pdf-highlight.active {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.8);
+            animation: pulse-highlight 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-highlight {
+            0%, 100% {
+                box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+            }
+        }
+
+        /* Citation Panel (Right Sidebar) */
+        .citation-panel {
+            display: none;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            overflow: hidden;
+        }
+
+        .citation-panel.active {
+            display: flex;
+        }
+
+        .citation-panel-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .citation-panel-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .citation-panel-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .citation-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .citation-panel-field {
+            margin-bottom: 24px;
+        }
+
+        .citation-panel-field-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+        }
+
+        .citation-panel-field-value {
+            font-size: 14px;
+            color: var(--gray-700);
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .citation-item {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .citation-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .citation-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .citation-item-page {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .citation-item-section {
+            font-size: 11px;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .citation-item-text {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* Field Label Enhancement for Citations */
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .field-label label {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* ==================== CITATION DETAILS PANEL ==================== */
+        .citation-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .citation-panel.open {
+            right: 0;
+        }
+
+        .citation-panel-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .citation-panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .citation-panel-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .citation-panel-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .citation-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .citation-panel-field {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .citation-panel-field-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+        }
+
+        .citation-panel-field-value {
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .citation-item {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .citation-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+            transform: translateX(-4px);
+        }
+
+        .citation-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .citation-item-number {
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .citation-item-page {
+            font-size: 12px;
+            color: var(--gray-500);
+            background: var(--gray-100);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .citation-item-section {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .citation-item-text {
+            font-size: 12px;
+            color: var(--gray-600);
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .citation-item-footer {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .citation-item-action {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .no-citations {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-400);
+        }
+
+        .no-citations-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .citation-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1999;
+        }
+
+        .citation-panel-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body>
+    <!-- Citation Panel Overlay -->
+    <div class="citation-panel-overlay" id="citation-panel-overlay" onclick="closeCitationPanel()"></div>
+
+    <!-- Citation Details Panel -->
+    <div class="citation-panel" id="citation-panel">
+        <div class="citation-panel-header">
+            <div class="citation-panel-title">
+                📚 Citation Details
+            </div>
+            <button class="citation-panel-close" onclick="closeCitationPanel()">×</button>
+        </div>
+        <div class="citation-panel-content" id="citation-panel-content">
+            <!-- Content populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo-section">
+                <div class="logo">🧠</div>
+                <div class="title-section">
+                    <h1>Cerebellar SDC Extraction System</h1>
+                    <div class="subtitle">Professional Edition with Advanced PDF Tools</div>
+                </div>
+            </div>
+            <div class="status-section">
+                <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                    📂 Upload PDF
+                </button>
+                <button class="btn btn-success" onclick="exportData()" id="export-btn" disabled>
+                    💾 Export JSON
+                </button>
+            </div>
+        </div>
+        
+        <!-- Thumbnail Sidebar -->
+        <div class="thumbnail-sidebar">
+            <div class="thumbnail-header">📑 Pages</div>
+            <div id="thumbnail-container"></div>
+        </div>
+        
+        <!-- Left Panel: Extraction Form -->
+        <div class="extraction-panel">
+            <div class="panel-header">
+                <h2>📋 Study Data Extraction</h2>
+                <p>Click fields to extract or use AI Extract buttons</p>
+            </div>
+            <div class="form-content">
+                <!-- Article Metadata -->
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Article Title</label>
+                        <button class="extract-btn" onclick="extractField('title')">AI Extract</button>
+                    </div>
+                    <input type="text" class="field-input" id="title" placeholder="Enter article title...">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>DOI</label>
+                        <button class="extract-btn" onclick="extractField('doi')">AI Extract</button>
+                    </div>
+                    <input type="text" class="field-input" id="doi" placeholder="10.xxxx/xxxxx">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Study Design</label>
+                        <button class="extract-btn" onclick="extractField('study_design')">AI Extract</button>
+                    </div>
+                    <select class="field-input" id="study_design">
+                        <option value="">Select study design...</option>
+                        <option value="RCT">RCT</option>
+                        <option value="PROSPECTIVE_COHORT">Prospective Cohort</option>
+                        <option value="RETROSPECTIVE_COHORT">Retrospective Cohort</option>
+                        <option value="CASE_CONTROL">Case-Control</option>
+                        <option value="CASE_SERIES">Case Series</option>
+                    </select>
+                </div>
+                
+                <!-- Study Population -->
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Total Sample Size</label>
+                        <button class="extract-btn" onclick="extractField('total_sample_size')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="total_sample_size" placeholder="e.g., 42">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Surgical Group Size</label>
+                        <button class="extract-btn" onclick="extractField('surgical_group_size')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="surgical_group_size" placeholder="e.g., 21">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Control Group Size</label>
+                        <button class="extract-btn" onclick="extractField('control_group_size')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="control_group_size" placeholder="e.g., 21">
+                </div>
+                
+                <!-- Interventions -->
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Surgical Type</label>
+                        <button class="extract-btn" onclick="extractField('surgical_type')">AI Extract</button>
+                    </div>
+                    <select class="field-input" id="surgical_type">
+                        <option value="">Select surgical type...</option>
+                        <option value="SDC_ALONE">SDC Alone</option>
+                        <option value="SDC_EVD">SDC + EVD</option>
+                        <option value="SDC_HEMATOMA_EVACUATION">SDC + Hematoma Evacuation</option>
+                        <option value="SDC_NECROSECTOMY">SDC + Necrosectomy</option>
+                    </select>
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Timing Category</label>
+                        <button class="extract-btn" onclick="extractField('timing_category')">AI Extract</button>
+                    </div>
+                    <select class="field-input" id="timing_category">
+                        <option value="">Select timing...</option>
+                        <option value="<24h">&lt;24 hours</option>
+                        <option value="24-48h">24-48 hours</option>
+                        <option value=">48h">&gt;48 hours</option>
+                        <option value="UNKNOWN">Unknown</option>
+                    </select>
+                </div>
+                
+                <!-- Outcomes -->
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>30-Day Mortality (Surgical %)</label>
+                        <button class="extract-btn" onclick="extractField('mortality_30day_surgical')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="mortality_30day_surgical" placeholder="e.g., 23.8" step="0.1">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>30-Day Mortality (Control %)</label>
+                        <button class="extract-btn" onclick="extractField('mortality_30day_control')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="mortality_30day_control" placeholder="e.g., 71.4" step="0.1">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Favorable mRS (Surgical %)</label>
+                        <button class="extract-btn" onclick="extractField('mrs_favorable_surgical')">AI Extract</button>
+                    </div>
+                    <input type="number" class="field-input" id="mrs_favorable_surgical" placeholder="mRS 0-3 %" step="0.1">
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">
+                        <label>Inclusion Criteria</label>
+                        <button class="extract-btn" onclick="extractField('inclusion_criteria')">AI Extract</button>
+                    </div>
+                    <textarea class="field-input" id="inclusion_criteria" placeholder="Enter inclusion criteria..."></textarea>
+                </div>
+                
+                <button class="extract-all-btn" onclick="extractAll()">
+                    🚀 Extract All Fields
+                </button>
+            </div>
+        </div>
+        
+        <!-- Center Panel: PDF Viewer -->
+        <div class="pdf-panel">
+            <div class="pdf-toolbar">
+                <!-- Navigation Controls -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="prevPage()" id="prev-page" disabled>
+                        ← Prev
+                    </button>
+                    <input type="number" id="page-num" value="1" min="1" onchange="goToPage(this.value)">
+                    <span style="font-size: 12px; color: var(--gray-700);">/ <span id="page-count">0</span></span>
+                    <button class="toolbar-btn" onclick="nextPage()" id="next-page" disabled>
+                        Next →
+                    </button>
+                </div>
+                
+                <!-- Zoom Controls -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="zoomOut()">🔍−</button>
+                    <select id="zoom-select" onchange="setZoom(this.value)">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1">100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5" selected>150%</option>
+                        <option value="2">200%</option>
+                        <option value="fit">Fit Width</option>
+                    </select>
+                    <button class="toolbar-btn" onclick="zoomIn()">🔍+</button>
+                </div>
+                
+                <!-- Highlight Tools -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="setHighlightColor('yellow')" id="highlight-yellow">
+                        🖍️ Yellow
+                    </button>
+                    <button class="toolbar-btn" onclick="setHighlightColor('green')" id="highlight-green">
+                        🖍️ Green
+                    </button>
+                    <button class="toolbar-btn" onclick="setHighlightColor('pink')" id="highlight-pink">
+                        🖍️ Pink
+                    </button>
+                    <button class="toolbar-btn" onclick="clearHighlights()">
+                        🗑️ Clear
+                    </button>
+                </div>
+                
+                <!-- Search -->
+                <div class="toolbar-group">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="search-input" placeholder="Search in PDF..." 
+                               onkeyup="handleSearch(event)">
+                        <div class="search-nav">
+                            <button class="toolbar-btn" onclick="prevSearchResult()" id="search-prev" disabled>↑</button>
+                            <button class="toolbar-btn" onclick="nextSearchResult()" id="search-next" disabled>↓</button>
+                        </div>
+                    </div>
+                    <span id="search-status"></span>
+                </div>
+                
+                <!-- Rotation -->
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="rotatePage()">🔄</button>
+                </div>
+            </div>
+            
+            <div id="pdf-viewport">
+                <div id="upload-area" onclick="document.getElementById('file-input').click()">
+                    <h3>📄 Upload PDF to Begin</h3>
+                    <p>Click here or drag and drop a PDF file</p>
+                    <div class="file-types">Supports: .pdf files</div>
+                </div>
+                <div id="pdf-canvas-wrapper" style="display: none;">
+                    <canvas id="pdf-canvas"></canvas>
+                    <div class="textLayer" id="text-layer"></div>
+                    <div class="annotationLayer" id="annotation-layer"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel: Results -->
+        <div class="results-panel">
+            <div class="panel-header">
+                <h2>📊 Extraction Results</h2>
+                <p>Real-time progress and statistics</p>
+            </div>
+            <div class="results-content">
+                <!-- Statistics -->
+                <div class="result-section">
+                    <div class="section-title">📈 Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="fields-extracted">0</div>
+                            <div class="stat-label">Fields Extracted</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-confidence">0%</div>
+                            <div class="stat-label">Avg Confidence</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Multi-Agent Progress -->
+                <div class="result-section">
+                    <div class="section-title">🤖 Multi-Agent Extraction</div>
+                    <div id="agent-container">
+                        <div class="agent-item">
+                            <div class="agent-header">
+                                <span class="agent-name">📋 Metadata Agent</span>
+                                <span class="agent-status">Idle</span>
+                            </div>
+                            <div class="agent-progress-bar">
+                                <div class="agent-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="agent-item">
+                            <div class="agent-header">
+                                <span class="agent-name">👥 Population Agent</span>
+                                <span class="agent-status">Idle</span>
+                            </div>
+                            <div class="agent-progress-bar">
+                                <div class="agent-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="agent-item">
+                            <div class="agent-header">
+                                <span class="agent-name">🔬 Intervention Agent</span>
+                                <span class="agent-status">Idle</span>
+                            </div>
+                            <div class="agent-progress-bar">
+                                <div class="agent-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="agent-item">
+                            <div class="agent-header">
+                                <span class="agent-name">📊 Outcomes Agent</span>
+                                <span class="agent-status">Idle</span>
+                            </div>
+                            <div class="agent-progress-bar">
+                                <div class="agent-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="agent-item">
+                            <div class="agent-header">
+                                <span class="agent-name">✅ Validator Agent</span>
+                                <span class="agent-status">Idle</span>
+                            </div>
+                            <div class="agent-progress-bar">
+                                <div class="agent-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Extractions -->
+                <div class="result-section">
+                    <div class="section-title">⚡ Recent Extractions</div>
+                    <div id="recent-extractions">
+                        <p style="font-size: 12px; color: var(--gray-700);">
+                            No extractions yet. Click "AI Extract" on any field to begin.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <input type="file" id="file-input" accept=".pdf" style="display: none;" onchange="handleFileSelect(event)">
+    
+    <script>
+        // PDF.js configuration
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Configuration
+        const USE_MOCK_DATA = true;  // Set to false for real API, true for standalone demo
+        const API_BASE_URL = 'http://localhost:5000';  // Backend API URL
+
+        // Global state
+        let currentSessionId = null;  // Set by upload when using API
+        let pdfDoc = null;
+        let currentPage = 1;
+        let pageCount = 0;
+        let currentZoom = 1.5;
+        let rotation = 0;
+        let highlights = [];
+        let currentHighlightColor = null;
+        let searchResults = [];
+        let currentSearchIndex = -1;
+        let selectedText = '';
+        let extractedData = {};
+        let currentTooltip = null;
+        let pdfHighlights = [];
+
+        // ==================== CITATION FUNCTIONS ====================
+
+        /**
+         * Add citation badge next to field label
+         */
+        function addCitationBadge(fieldName, citationData) {
+            const fieldLabel = document.querySelector(`[for="${fieldName}"]`)?.parentElement ||
+                              document.getElementById(fieldName)?.previousElementSibling;
+
+            if (!fieldLabel) return;
+
+            // Remove existing badge
+            const existingBadge = fieldLabel.querySelector('.citation-badge');
+            if (existingBadge) existingBadge.remove();
+
+            const citationCount = citationData.claude_citations?.length || 0;
+            if (citationCount === 0) return;
+
+            // Determine confidence class
+            const confidence = citationData.citation_confidence || citationData.confidence || 0.8;
+            let confidenceClass = 'medium-confidence';
+            if (confidence >= 0.9) confidenceClass = 'high-confidence';
+            else if (confidence < 0.7) confidenceClass = 'low-confidence';
+
+            // Create badge
+            const badge = document.createElement('span');
+            badge.className = `citation-badge ${confidenceClass}`;
+            badge.innerHTML = `📚 ${citationCount} citation${citationCount > 1 ? 's' : ''}`;
+            badge.dataset.fieldName = fieldName;
+
+            // Add event listeners
+            badge.addEventListener('mouseenter', (e) => showCitationTooltip(e, fieldName, citationData));
+            badge.addEventListener('mouseleave', hideCitationTooltip);
+            badge.addEventListener('click', () => highlightFieldCitations(fieldName, citationData));
+
+            fieldLabel.appendChild(badge);
+        }
+
+        /**
+         * Show citation tooltip on hover
+         */
+        function showCitationTooltip(event, fieldName, citationData) {
+            hideCitationTooltip(); // Hide any existing tooltip
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'citation-tooltip active';
+            tooltip.id = 'citation-tooltip';
+
+            // Header
+            const header = document.createElement('div');
+            header.className = 'citation-tooltip-header';
+            header.innerHTML = `<span>Citations for ${fieldName}</span><span>${citationData.claude_citations?.length || 0}</span>`;
+            tooltip.appendChild(header);
+
+            // Cited sections
+            if (citationData.cited_sections && citationData.cited_sections.length > 0) {
+                const sectionsDiv = document.createElement('div');
+                sectionsDiv.className = 'citation-tooltip-sections';
+                citationData.cited_sections.forEach(section => {
+                    const tag = document.createElement('span');
+                    tag.className = 'citation-section-tag';
+                    tag.textContent = section;
+                    sectionsDiv.appendChild(tag);
+                });
+                tooltip.appendChild(sectionsDiv);
+            }
+
+            // Snippet preview
+            if (citationData.cited_text_snippets && citationData.cited_text_snippets.length > 0) {
+                const snippet = document.createElement('div');
+                snippet.className = 'citation-tooltip-snippet';
+                snippet.textContent = citationData.cited_text_snippets[0].substring(0, 150) + '...';
+                tooltip.appendChild(snippet);
+            }
+
+            // Confidence display
+            const confidence = citationData.citation_confidence || citationData.confidence || 0.8;
+            const confidenceDiv = document.createElement('div');
+            confidenceDiv.className = 'citation-confidence-display';
+            confidenceDiv.innerHTML = `
+                <span class="citation-confidence-label">Confidence:</span>
+                <div class="citation-confidence-bar">
+                    <div class="citation-confidence-fill ${confidence >= 0.9 ? 'high' : confidence >= 0.7 ? 'medium' : 'low'}"
+                         style="width: ${confidence * 100}%"></div>
+                </div>
+                <span class="citation-confidence-label">${(confidence * 100).toFixed(0)}%</span>
+            `;
+            tooltip.appendChild(confidenceDiv);
+
+            // Actions
+            const actions = document.createElement('div');
+            actions.className = 'citation-tooltip-actions';
+            actions.innerHTML = `
+                <button class="citation-tooltip-btn primary" onclick="highlightFieldCitations('${fieldName}', extractedData['${fieldName}'])">
+                    View in PDF
+                </button>
+                <button class="citation-tooltip-btn secondary" onclick="openCitationPanel('${fieldName}')">
+                    Details
+                </button>
+            `;
+            tooltip.appendChild(actions);
+
+            document.body.appendChild(tooltip);
+
+            // Position tooltip
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 10) + 'px';
+
+            // Adjust if off-screen
+            const tooltipRect = tooltip.getBoundingClientRect();
+            if (tooltipRect.right > window.innerWidth) {
+                tooltip.style.left = (window.innerWidth - tooltipRect.width - 20) + 'px';
+            }
+            if (tooltipRect.top < 0) {
+                tooltip.style.top = rect.top - tooltipRect.height - 10 + 'px';
+            }
+
+            currentTooltip = tooltip;
+        }
+
+        /**
+         * Hide citation tooltip
+         */
+        function hideCitationTooltip() {
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }
+
+        /**
+         * Add confidence bar below input field
+         */
+        function addConfidenceBar(fieldName, confidence) {
+            const input = document.getElementById(fieldName);
+            if (!input) return;
+
+            // Remove existing confidence bar
+            let wrapper = input.nextElementSibling;
+            if (wrapper && wrapper.classList.contains('confidence-bar-wrapper')) {
+                wrapper.remove();
+            }
+
+            // Create new confidence bar
+            wrapper = document.createElement('div');
+            wrapper.className = 'confidence-bar-wrapper active';
+
+            const bar = document.createElement('div');
+            bar.className = 'confidence-bar';
+
+            const fill = document.createElement('div');
+            fill.className = 'confidence-bar-fill';
+            fill.style.width = (confidence * 100) + '%';
+
+            // Color based on confidence
+            if (confidence >= 0.9) {
+                fill.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+            } else if (confidence >= 0.7) {
+                fill.style.background = 'linear-gradient(90deg, var(--primary), #1d4ed8)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, var(--warning), #d97706)';
+            }
+
+            bar.appendChild(fill);
+            wrapper.appendChild(bar);
+
+            input.parentElement.insertBefore(wrapper, input.nextSibling);
+        }
+
+        /**
+         * Highlight citations in PDF
+         */
+        function highlightFieldCitations(fieldName, citationData) {
+            clearPDFHighlights();
+
+            if (!citationData || !citationData.claude_citations) return;
+
+            citationData.claude_citations.forEach((citation, index) => {
+                if (citation.pdf_bounding_box) {
+                    const bbox = citation.pdf_bounding_box;
+                    const pageNum = bbox.page || citationData.page_number || 1;
+
+                    // Navigate to page if not current
+                    if (pageNum !== currentPage) {
+                        renderPage(pageNum);
+                    }
+
+                    // Add highlight
+                    addPDFHighlight(bbox, pageNum, index === 0);
+                }
+            });
+
+            showToast(`Showing ${citationData.claude_citations.length} citation(s) in PDF`, 'info');
+        }
+
+        /**
+         * Add PDF highlight overlay
+         */
+        function addPDFHighlight(boundingBox, pageNum, isActive = false) {
+            const canvas = document.getElementById('pdf-canvas');
+            if (!canvas || currentPage !== pageNum) return;
+
+            // Get or create highlight layer
+            let highlightLayer = document.getElementById('pdf-highlight-layer');
+            if (!highlightLayer) {
+                highlightLayer = document.createElement('div');
+                highlightLayer.id = 'pdf-highlight-layer';
+                highlightLayer.className = 'pdf-highlight-layer';
+                canvas.parentElement.appendChild(highlightLayer);
+            }
+
+            // Create highlight element
+            const highlight = document.createElement('div');
+            highlight.className = 'pdf-highlight' + (isActive ? ' active' : '');
+
+            // Position highlight (bounding box coords are in PDF points)
+            const scale = canvas.width / (currentPageObj?.view[2] || 612);
+            highlight.style.left = boundingBox.x0 * scale + 'px';
+            highlight.style.top = boundingBox.y0 * scale + 'px';
+            highlight.style.width = (boundingBox.x1 - boundingBox.x0) * scale + 'px';
+            highlight.style.height = (boundingBox.y1 - boundingBox.y0) * scale + 'px';
+
+            highlightLayer.appendChild(highlight);
+            pdfHighlights.push(highlight);
+        }
+
+        /**
+         * Clear all PDF highlights
+         */
+        function clearPDFHighlights() {
+            const highlightLayer = document.getElementById('pdf-highlight-layer');
+            if (highlightLayer) {
+                highlightLayer.innerHTML = '';
+            }
+            pdfHighlights = [];
+        }
+
+        /**
+         * Open citation details panel
+         */
+        /**
+         * Open citation details panel
+         */
+        function openCitationPanel(fieldName) {
+            const citationData = extractedData[fieldName];
+            if (!citationData || !citationData.claude_citations || citationData.claude_citations.length === 0) {
+                showToast('No citations available for this field', 'info');
+                return;
+            }
+
+            const panel = document.getElementById('citation-panel');
+            const overlay = document.getElementById('citation-panel-overlay');
+            const content = document.getElementById('citation-panel-content');
+
+            // Build panel content
+            let html = `
+                <div class="citation-panel-field">
+                    <div class="citation-panel-field-name">${fieldName.replace(/_/g, ' ').toUpperCase()}</div>
+                    <div class="citation-panel-field-value">${citationData.value}</div>
+                </div>
+                <div style="margin-bottom: 12px; font-size: 13px; color: var(--gray-600);">
+                    <strong>${citationData.claude_citations.length}</strong> citation${citationData.claude_citations.length > 1 ? 's' : ''} found
+                </div>
+            `;
+
+            if (citationData.claude_citations.length > 0) {
+                citationData.claude_citations.forEach((citation, index) => {
+                    const section = citationData.cited_sections?.[index] || 'Unknown Section';
+                    const snippet = citationData.cited_text_snippets?.[index] || citation.cited_text || 'No preview available';
+                    const page = citation.pdf_bounding_box?.page || citation.source?.match(/page=(\\d+)/)?.[1] || '?';
+
+                    html += `
+                        <div class="citation-item" onclick="jumpToCitation('${fieldName}', ${index})">
+                            <div class="citation-item-header">
+                                <div class="citation-item-number">${index + 1}</div>
+                                <div class="citation-item-page">📄 Page ${page}</div>
+                            </div>
+                            <div class="citation-item-section">${section}</div>
+                            <div class="citation-item-text">${snippet.substring(0, 150)}...</div>
+                            <div class="citation-item-footer">
+                                <div class="citation-item-action">
+                                    → View in PDF
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="no-citations">
+                        <div class="no-citations-icon">📚</div>
+                        <div>No citations available</div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = html;
+            panel.classList.add('open');
+            overlay.classList.add('active');
+        }
+
+        /**
+         * Close citation panel
+         */
+        function closeCitationPanel() {
+            const panel = document.getElementById('citation-panel');
+            const overlay = document.getElementById('citation-panel-overlay');
+            panel.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        /**
+         * Jump to specific citation in PDF
+         */
+        function jumpToCitation(fieldName, citationIndex) {
+            const citationData = extractedData[fieldName];
+            if (!citationData || !citationData.claude_citations) return;
+
+            const citation = citationData.claude_citations[citationIndex];
+            if (citation.pdf_bounding_box) {
+                const bbox = citation.pdf_bounding_box;
+                const pageNum = bbox.page || 1;
+
+                // Navigate to page
+                if (currentPage !== pageNum) {
+                    clearPDFHighlights();
+                    renderPage(pageNum);
+                }
+
+                // Highlight citation
+                setTimeout(() => {
+                    addPDFHighlight(bbox, pageNum, true);
+                    showToast(`Showing citation ${citationIndex + 1} of ${citationData.claude_citations.length}`, 'success');
+                }, 300);
+            }
+        }
+
+        // ==================== END CITATION FUNCTIONS ====================
+
+        // Handle file selection
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file || file.type !== 'application/pdf') {
+                showToast('Please select a valid PDF file', 'error');
+                return;
+            }
+
+            showToast('Loading PDF...', 'info');
+
+            // Load PDF in viewer
+            const arrayBuffer = await file.arrayBuffer();
+            await loadPDF(arrayBuffer);
+
+            // Upload to backend if not in mock mode
+            if (!USE_MOCK_DATA && API_BASE_URL) {
+                try {
+                    showToast('Uploading PDF to server...', 'info');
+
+                    const formData = new FormData();
+                    formData.append('pdf', file);
+
+                    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Upload failed: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success && data.session_id) {
+                        currentSessionId = data.session_id;
+                        showToast('✅ PDF uploaded! Ready for extraction', 'success');
+                    } else {
+                        throw new Error(data.error || 'Upload failed');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showToast(`❌ Upload failed: ${error.message}. Using viewer only.`, 'error');
+                }
+            }
+        }
+        
+        // Load PDF
+        async function loadPDF(data) {
+            try {
+                pdfDoc = await pdfjsLib.getDocument({data}).promise;
+                pageCount = pdfDoc.numPages;
+                
+                document.getElementById('page-count').textContent = pageCount;
+                document.getElementById('page-num').max = pageCount;
+                document.getElementById('prev-page').disabled = false;
+                document.getElementById('next-page').disabled = false;
+                document.getElementById('export-btn').disabled = false;
+                
+                document.getElementById('upload-area').style.display = 'none';
+                document.getElementById('pdf-canvas-wrapper').style.display = 'block';
+                
+                // Generate thumbnails
+                generateThumbnails();
+                
+                // Render first page
+                renderPage(1);
+                
+                showToast(`PDF loaded: ${pageCount} pages`, 'success');
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                showToast('Error loading PDF', 'error');
+            }
+        }
+        
+        // Generate thumbnails
+        async function generateThumbnails() {
+            const container = document.getElementById('thumbnail-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= Math.min(pageCount, 50); i++) {
+                const page = await pdfDoc.getPage(i);
+                const scale = 0.2;
+                const viewport = page.getViewport({scale});
+                
+                const canvas = document.createElement('canvas');
+                canvas.className = 'thumbnail-canvas';
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const context = canvas.getContext('2d');
+                await page.render({canvasContext: context, viewport}).promise;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'thumbnail-item';
+                if (i === 1) wrapper.classList.add('active');
+                wrapper.onclick = () => goToPage(i);
+                
+                const label = document.createElement('div');
+                label.className = 'thumbnail-label';
+                label.textContent = `Page ${i}`;
+                
+                wrapper.appendChild(canvas);
+                wrapper.appendChild(label);
+                container.appendChild(wrapper);
+            }
+        }
+        
+        // Render page
+        async function renderPage(num) {
+            if (!pdfDoc) return;
+            
+            currentPage = num;
+            document.getElementById('page-num').value = num;
+            
+            // Update thumbnail highlighting
+            document.querySelectorAll('.thumbnail-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx + 1 === num);
+            });
+            
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({scale: currentZoom, rotation});
+            
+            const canvas = document.getElementById('pdf-canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            
+            // Render PDF page
+            await page.render({canvasContext: context, viewport}).promise;
+            
+            // Render text layer
+            const textLayer = document.getElementById('text-layer');
+            textLayer.innerHTML = '';
+            textLayer.style.width = viewport.width + 'px';
+            textLayer.style.height = viewport.height + 'px';
+            
+            const textContent = await page.getTextContent();
+            pdfjsLib.renderTextLayer({
+                textContentSource: textContent,
+                container: textLayer,
+                viewport: viewport,
+                textDivs: []
+            });
+            
+            // Render annotations/highlights
+            renderAnnotations();
+            
+            // Re-render search highlights if searching
+            if (searchResults.length > 0) {
+                renderSearchHighlights();
+            }
+        }
+        
+        // Navigation functions
+        function nextPage() {
+            if (currentPage < pageCount) {
+                clearPDFHighlights();  // Clear citation highlights on manual navigation
+                renderPage(currentPage + 1);
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                clearPDFHighlights();  // Clear citation highlights on manual navigation
+                renderPage(currentPage - 1);
+            }
+        }
+
+        function goToPage(num) {
+            num = parseInt(num);
+            if (num >= 1 && num <= pageCount) {
+                clearPDFHighlights();  // Clear citation highlights on manual navigation
+                renderPage(num);
+            }
+        }
+        
+        // Zoom functions
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.25, 3);
+            renderPage(currentPage);
+        }
+        
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.25, 0.5);
+            renderPage(currentPage);
+        }
+        
+        function setZoom(value) {
+            if (value === 'fit') {
+                const viewport = document.getElementById('pdf-viewport');
+                currentZoom = (viewport.clientWidth - 40) / (8.5 * 96);
+            } else {
+                currentZoom = parseFloat(value);
+            }
+            renderPage(currentPage);
+        }
+        
+        function rotatePage() {
+            rotation = (rotation + 90) % 360;
+            renderPage(currentPage);
+        }
+        
+        // Highlighting functions
+        function setHighlightColor(color) {
+            currentHighlightColor = currentHighlightColor === color ? null : color;
+            
+            document.querySelectorAll('[id^="highlight-"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (currentHighlightColor) {
+                document.getElementById(`highlight-${color}`).classList.add('active');
+                showToast(`Highlighting enabled (${color}). Select text to highlight.`, 'info');
+            }
+        }
+        
+        function clearHighlights() {
+            highlights = highlights.filter(h => h.page !== currentPage);
+            renderAnnotations();
+            showToast('Highlights cleared for current page', 'success');
+        }
+        
+        function renderAnnotations() {
+            const layer = document.getElementById('annotation-layer');
+            layer.innerHTML = '';
+            
+            const pageHighlights = highlights.filter(h => h.page === currentPage);
+            pageHighlights.forEach((h, idx) => {
+                const div = document.createElement('div');
+                div.className = `highlight ${h.color}`;
+                div.style.left = h.x + 'px';
+                div.style.top = h.y + 'px';
+                div.style.width = h.width + 'px';
+                div.style.height = h.height + 'px';
+                div.onclick = () => removeHighlight(idx);
+                layer.appendChild(div);
+            });
+        }
+        
+        function removeHighlight(idx) {
+            highlights.splice(idx, 1);
+            renderAnnotations();
+        }
+        
+        // Search functions
+        function handleSearch(event) {
+            const query = event.target.value.trim();
+            
+            if (event.key === 'Enter' && query) {
+                performSearch(query);
+            } else if (!query) {
+                clearSearch();
+            }
+        }
+        
+        async function performSearch(query) {
+            if (!pdfDoc) return;
+            
+            searchResults = [];
+            currentSearchIndex = -1;
+            
+            // Search all pages
+            for (let i = 1; i <= pageCount; i++) {
+                const page = await pdfDoc.getPage(i);
+                const textContent = await page.getTextContent();
+                const text = textContent.items.map(item => item.str).join(' ');
+                
+                const regex = new RegExp(query, 'gi');
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                    searchResults.push({page: i, index: match.index});
+                }
+            }
+            
+            const status = document.getElementById('search-status');
+            if (searchResults.length > 0) {
+                status.textContent = `Found ${searchResults.length} results`;
+                document.getElementById('search-prev').disabled = false;
+                document.getElementById('search-next').disabled = false;
+                nextSearchResult();
+            } else {
+                status.textContent = 'No results';
+                clearSearch();
+            }
+        }
+        
+        function nextSearchResult() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+            goToSearchResult();
+        }
+        
+        function prevSearchResult() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+            goToSearchResult();
+        }
+        
+        function goToSearchResult() {
+            const result = searchResults[currentSearchIndex];
+            if (result.page !== currentPage) {
+                goToPage(result.page);
+            }
+            document.getElementById('search-status').textContent = 
+                `Result ${currentSearchIndex + 1} of ${searchResults.length}`;
+            renderSearchHighlights();
+        }
+        
+        function renderSearchHighlights() {
+            // Clear existing search highlights
+            document.querySelectorAll('.search-highlight').forEach(el => el.remove());
+            
+            // This is a simplified version - full implementation would need actual text positioning
+            // For production, you'd need to match search results with text layer positions
+        }
+        
+        function clearSearch() {
+            searchResults = [];
+            currentSearchIndex = -1;
+            document.getElementById('search-status').textContent = '';
+            document.getElementById('search-prev').disabled = true;
+            document.getElementById('search-next').disabled = true;
+            document.querySelectorAll('.search-highlight').forEach(el => el.remove());
+        }
+        
+        // Text selection handling - update selectedText on selection change
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            selectedText = selection.toString().trim();
+        });
+
+        // Create highlight on mouseup (after selection is complete)
+        document.addEventListener('mouseup', (e) => {
+            // Small delay to ensure selection is finalized
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const text = selection.toString().trim();
+
+                // If highlighting is enabled and text is selected, create highlight
+                if (currentHighlightColor && text && selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const canvasWrapper = document.getElementById('pdf-canvas-wrapper');
+                    const viewport = document.getElementById('pdf-viewport');
+
+                    // Check if canvas wrapper is visible and PDF is loaded
+                    if (!canvasWrapper || !pdfDoc || canvasWrapper.style.display === 'none') {
+                        return;
+                    }
+
+                    // Check if selection is within the PDF viewport
+                    const viewportRect = viewport.getBoundingClientRect();
+                    const rect = range.getBoundingClientRect();
+
+                    // Check if selection rect intersects with viewport
+                    const inViewport = !(rect.right < viewportRect.left ||
+                                        rect.left > viewportRect.right ||
+                                        rect.bottom < viewportRect.top ||
+                                        rect.top > viewportRect.bottom);
+
+                    if (!inViewport) {
+                        return;
+                    }
+
+                    const wrapperRect = canvasWrapper.getBoundingClientRect();
+
+                    // Calculate position relative to the canvas wrapper (accounting for scroll)
+                    const x = rect.left - wrapperRect.left + viewport.scrollLeft;
+                    const y = rect.top - wrapperRect.top + viewport.scrollTop;
+
+                    // Validate the selection is within bounds and reasonable size
+                    if (rect.width > 0 && rect.height > 0 &&
+                        rect.width < wrapperRect.width * 2 && rect.height < wrapperRect.height) {
+                        highlights.push({
+                            page: currentPage,
+                            x: x,
+                            y: y,
+                            width: rect.width,
+                            height: rect.height,
+                            color: currentHighlightColor,
+                            text: text
+                        });
+                        renderAnnotations();
+                        showToast(`✓ Highlighted: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`, 'success');
+                        selection.removeAllRanges();
+                    }
+                }
+            }, 100);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Shift + V: Quick paste selected text
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'v') {
+                e.preventDefault();
+                const activeElement = document.activeElement;
+                if (activeElement && activeElement.classList.contains('field-input') && selectedText) {
+                    activeElement.value = selectedText;
+                    activeElement.classList.add('filled');
+                    showToast('Text pasted!', 'success');
+                }
+            }
+            
+            // Arrow keys for navigation
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (e.key === 'ArrowLeft') prevPage();
+                if (e.key === 'ArrowRight') nextPage();
+            }
+        });
+        
+        // Extraction functions (mock implementations - replace with real API calls)
+        async function extractField(fieldName) {
+            if (!pdfDoc) {
+                showToast('Please upload a PDF first', 'error');
+                return;
+            }
+
+            showToast(`Extracting ${fieldName}...`, 'info');
+
+            // Real API mode
+            if (!USE_MOCK_DATA && API_BASE_URL && currentSessionId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/extract/field`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            session_id: currentSessionId,
+                            field_name: fieldName
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const extraction = data.extraction;
+
+                        // Update input field
+                        const input = document.getElementById(fieldName);
+                        if (input) {
+                            input.value = extraction.value;
+                            input.classList.add('filled');
+                        }
+
+                        // Store extraction data with full citation structure
+                        extractedData[fieldName] = {
+                            value: extraction.value,
+                            confidence: extraction.confidence,
+                            timestamp: extraction.timestamp,
+                            page_number: extraction.page_number,
+                            bounding_box: extraction.bounding_box,
+                            agent: extraction.agent,
+                            // Citation data from API
+                            claude_citations: extraction.claude_citations || [],
+                            cited_sections: extraction.cited_sections || [],
+                            cited_text_snippets: extraction.cited_text_snippets || [],
+                            citation_confidence: extraction.citation_confidence || extraction.confidence
+                        };
+
+                        // Update UI components
+                        updateStatistics();
+                        addRecentExtraction(fieldName, extraction.value);
+
+                        // Add citation UI if citations exist
+                        if (extraction.claude_citations && extraction.claude_citations.length > 0) {
+                            addCitationBadge(fieldName, extractedData[fieldName]);
+                            addConfidenceBar(fieldName, extraction.confidence);
+                        }
+
+                        showToast(`✅ ${fieldName} extracted! (${extraction.claude_citations?.length || 0} citations)`, 'success');
+                    } else {
+                        throw new Error(data.error || 'Extraction failed');
+                    }
+                } catch (error) {
+                    console.error('Extraction error:', error);
+                    showToast(`❌ Failed to extract ${fieldName}: ${error.message}`, 'error');
+                }
+                return;
+            }
+
+            // Mock mode - simulate AI extraction with timeout
+            setTimeout(() => {
+                const mockValues = {
+                    title: 'Suboccipital Decompressive Craniectomy for Space-Occupying Cerebellar Infarction',
+                    doi: '10.1227/NEU.0000000000001234',
+                    study_design: 'RETROSPECTIVE_COHORT',
+                    total_sample_size: 42,
+                    surgical_group_size: 21,
+                    control_group_size: 21,
+                    surgical_type: 'SDC_ALONE',
+                    timing_category: '<24h',
+                    mortality_30day_surgical: 23.8,
+                    mortality_30day_control: 71.4,
+                    mrs_favorable_surgical: 57.1,
+                    inclusion_criteria: 'Patients with space-occupying cerebellar infarction causing mass effect'
+                };
+
+                // Mock citation data (simulates real API response with citations)
+                const mockCitationData = {
+                    title: {
+                        claude_citations: [
+                            {
+                                type: "text_location",
+                                cited_text: "Suboccipital Decompressive Craniectomy for Space-Occupying Cerebellar Infarction",
+                                pdf_bounding_box: { x0: 72, y0: 150, x1: 523, y1: 180, page: 1 }
+                            }
+                        ],
+                        cited_sections: ["Title", "Abstract"],
+                        cited_text_snippets: [
+                            "Suboccipital Decompressive Craniectomy for Space-Occupying Cerebellar Infarction: Treatment and Outcomes in 56 Patients"
+                        ],
+                        citation_confidence: 0.98
+                    },
+                    mortality_30day_surgical: {
+                        claude_citations: [
+                            {
+                                type: "text_location",
+                                cited_text: "The 30-day mortality rate in the surgical group was 23.8%",
+                                pdf_bounding_box: { x0: 120, y0: 420, x1: 480, y1: 438, page: 3 }
+                            },
+                            {
+                                type: "text_location",
+                                cited_text: "Five of 21 patients (23.8%) in the decompression group died within 30 days",
+                                pdf_bounding_box: { x0: 120, y0: 460, x1: 480, y1: 478, page: 3 }
+                            }
+                        ],
+                        cited_sections: ["Results", "Outcomes"],
+                        cited_text_snippets: [
+                            "The 30-day mortality rate in the surgical group was 23.8% (5 of 21 patients)",
+                            "Five of 21 patients (23.8%) in the decompression group died within 30 days of surgery"
+                        ],
+                        citation_confidence: 0.95
+                    },
+                    surgical_type: {
+                        claude_citations: [
+                            {
+                                type: "text_location",
+                                cited_text: "All patients underwent suboccipital decompressive craniectomy without resection",
+                                pdf_bounding_box: { x0: 120, y0: 320, x1: 480, y1: 338, page: 2 }
+                            }
+                        ],
+                        cited_sections: ["Methods", "Surgical Technique"],
+                        cited_text_snippets: [
+                            "All patients underwent suboccipital decompressive craniectomy (SDC) without resection of necrotic cerebellar tissue"
+                        ],
+                        citation_confidence: 0.92
+                    }
+                };
+
+                const value = mockValues[fieldName];
+                if (value !== undefined) {
+                    const input = document.getElementById(fieldName);
+                    input.value = value;
+                    input.classList.add('filled');
+
+                    // Generate random confidence (0.7-1.0)
+                    const confidence = Math.random() * 0.3 + 0.7;
+
+                    // Store extraction data with citation structure
+                    extractedData[fieldName] = {
+                        value,
+                        confidence: confidence,
+                        timestamp: new Date().toISOString(),
+                        page_number: 1,
+                        bounding_box: null,
+                        // Include citation data if available for this field
+                        ...(mockCitationData[fieldName] || {})
+                    };
+
+                    // Update UI components
+                    updateStatistics();
+                    addRecentExtraction(fieldName, value);
+
+                    // Add citation UI if citation data exists
+                    if (mockCitationData[fieldName]) {
+                        addCitationBadge(fieldName, extractedData[fieldName]);
+                        addConfidenceBar(fieldName, confidence);
+                    }
+
+                    showToast(`✅ ${fieldName} extracted!`, 'success');
+                }
+            }, 1500);
+        }
+        
+        async function extractAll() {
+            if (!pdfDoc) {
+                showToast('Please upload a PDF first', 'error');
+                return;
+            }
+            
+            showToast('Starting full extraction...', 'info');
+            
+            const fields = [
+                'title', 'doi', 'study_design', 'total_sample_size',
+                'surgical_group_size', 'control_group_size', 'surgical_type',
+                'timing_category', 'mortality_30day_surgical', 'mortality_30day_control',
+                'mrs_favorable_surgical', 'inclusion_criteria'
+            ];
+            
+            const agents = document.querySelectorAll('.agent-item');
+            
+            // Simulate multi-agent processing
+            for (let i = 0; i < agents.length; i++) {
+                agents[i].classList.add('active');
+                agents[i].querySelector('.agent-status').textContent = 'Working';
+                agents[i].querySelector('.agent-status').classList.add('working');
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                agents[i].classList.remove('active');
+                agents[i].classList.add('complete');
+                agents[i].querySelector('.agent-status').textContent = 'Complete';
+                agents[i].querySelector('.agent-status').classList.remove('working');
+                agents[i].querySelector('.agent-status').classList.add('complete');
+                agents[i].querySelector('.agent-progress-fill').style.width = '100%';
+            }
+            
+            // Extract all fields
+            for (const field of fields) {
+                await extractField(field);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            showToast('✅ Full extraction complete!', 'success');
+        }
+        
+        function updateStatistics() {
+            const extracted = Object.keys(extractedData).length;
+            document.getElementById('fields-extracted').textContent = extracted;
+            
+            const avgConfidence = Object.values(extractedData)
+                .reduce((sum, item) => sum + item.confidence, 0) / extracted;
+            document.getElementById('avg-confidence').textContent = 
+                Math.round(avgConfidence * 100) + '%';
+        }
+        
+        function addRecentExtraction(field, value) {
+            const container = document.getElementById('recent-extractions');
+            const confidence = extractedData[field].confidence;
+            
+            let confidenceClass = 'low';
+            if (confidence > 0.85) confidenceClass = 'high';
+            else if (confidence > 0.7) confidenceClass = 'medium';
+            
+            const html = `
+                <div style="background: var(--gray-50); padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid var(--success);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 12px; color: var(--gray-900);">${field.replace(/_/g, ' ')}</strong>
+                        <span class="confidence-badge ${confidenceClass}">${Math.round(confidence * 100)}%</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--gray-700); word-break: break-word;">${value}</div>
+                </div>
+            `;
+            
+            if (container.querySelector('p')) {
+                container.innerHTML = '';
+            }
+            container.insertAdjacentHTML('afterbegin', html);
+        }
+        
+        function exportData() {
+            if (Object.keys(extractedData).length === 0) {
+                showToast('No data to export', 'error');
+                return;
+            }
+            
+            const exportObject = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    extractorVersion: '2.0.0-pro',
+                    model: 'claude-sonnet-4-20250514',
+                    totalFields: Object.keys(extractedData).length
+                },
+                data: extractedData,
+                highlights: highlights
+            };
+            
+            const blob = new Blob([JSON.stringify(exportObject, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cerebellar_extraction_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('✅ Data exported successfully!', 'success');
+        }
+        
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span style="font-size: 20px;">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span style="font-size: 13px; font-weight: 500;">${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // Drag and drop support
+        const uploadArea = document.getElementById('upload-area');
+        const pdfViewport = document.getElementById('pdf-viewport');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            [uploadArea, pdfViewport].forEach(element => {
+                element.addEventListener(eventName, preventDefaults, false);
+            });
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.style.borderColor = 'rgba(255,255,255,0.9)';
+            });
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.5)';
+        });
+        
+        uploadArea.addEventListener('drop', async (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                const arrayBuffer = await files[0].arrayBuffer();
+                loadPDF(arrayBuffer);
+            }
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.5)';
+        });
+        
+        console.log('🧠 Cerebellar SDC Extraction System Pro - Ready!');
+        console.log('📋 Features: Text selection, highlighting, search, thumbnails, multi-agent extraction');
+    </script>
+</body>
+</html>

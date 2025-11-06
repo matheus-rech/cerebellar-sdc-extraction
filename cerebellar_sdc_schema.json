@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cerebellar SDC Extraction Schema",
+  "description": "Schema for cerebellar stroke data extraction with suboccipital decompressive craniectomy",
+  "type": "object",
+  "properties": {
+    "ArticleMetadata": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Full article title"
+        },
+        "doi": {
+          "type": "string",
+          "description": "Digital Object Identifier",
+          "pattern": "^10\\.\\d{4,9}/[-._;()/:A-Za-z0-9]+$"
+        },
+        "pmid": {
+          "type": "string",
+          "description": "PubMed ID"
+        },
+        "journal": {
+          "type": "string",
+          "description": "Journal name"
+        },
+        "publication_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Publication date in YYYY-MM-DD format"
+        },
+        "study_design": {
+          "type": "string",
+          "enum": [
+            "RCT",
+            "PROSPECTIVE_COHORT",
+            "RETROSPECTIVE_COHORT",
+            "CASE_CONTROL",
+            "CASE_SERIES"
+          ],
+          "description": "Study design type"
+        }
+      },
+      "required": ["title", "study_design"]
+    },
+    "StudyPopulation": {
+      "type": "object",
+      "properties": {
+        "total_sample_size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of patients"
+        },
+        "surgical_group_size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of patients in surgical group"
+        },
+        "control_group_size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of patients in control group"
+        },
+        "inclusion_criteria": {
+          "type": "string",
+          "description": "Patient inclusion criteria"
+        },
+        "exclusion_criteria": {
+          "type": "string",
+          "description": "Patient exclusion criteria"
+        }
+      },
+      "required": ["total_sample_size"]
+    },
+    "Interventions": {
+      "type": "object",
+      "properties": {
+        "surgical_type": {
+          "type": "string",
+          "enum": [
+            "SDC_ALONE",
+            "SDC_WITH_EVD",
+            "SDC_WITH_RESECTION",
+            "OTHER"
+          ],
+          "description": "Type of surgical intervention"
+        },
+        "timing_category": {
+          "type": "string",
+          "enum": [
+            "<24h",
+            "24-48h",
+            ">48h",
+            "VARIABLE"
+          ],
+          "description": "Timing of surgical intervention"
+        },
+        "surgical_technique": {
+          "type": "string",
+          "description": "Detailed surgical technique description"
+        }
+      }
+    },
+    "Outcomes": {
+      "type": "object",
+      "properties": {
+        "mortality_30day_surgical": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "30-day mortality rate in surgical group (%)"
+        },
+        "mortality_30day_control": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "30-day mortality rate in control group (%)"
+        },
+        "mrs_favorable_surgical": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage with favorable mRS (0-3) in surgical group"
+        },
+        "mrs_favorable_control": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage with favorable mRS (0-3) in control group"
+        },
+        "predictors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Predictors of outcome"
+        }
+      }
+    }
+  },
+  "required": ["ArticleMetadata", "StudyPopulation"]
+}

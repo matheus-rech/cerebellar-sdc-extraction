@@ -1,0 +1,32 @@
+# Cerebellar SDC Extraction System - Requirements
+# Python 3.8+
+
+# Core Dependencies
+flask==3.0.0
+flask-cors==4.0.0
+anthropic==0.72.0  # Citations work with search_result mode (Files API not yet in released SDK)
+
+# PDF Processing - Using Marker (replaces pdfplumber)
+marker-pdf==1.10.1
+pypdfium2==4.30.0  # Required by Marker
+PyPDF2==3.0.1
+pdf2image==1.16.3
+Pillow==10.2.0
+
+# Note: pdfplumber is no longer used, replaced by marker-pdf for:
+# - Better structure preservation (markdown formatting)
+# - Automatic section detection with bounding boxes
+# - Superior provenance tracking capabilities
+
+# Data Processing
+python-dateutil==2.8.2
+jsonschema==4.20.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Optional - For Advanced Features
+# numpy==1.24.3
+# pandas==2.0.3
+# opencv-python==4.8.0.76  # For advanced image processing
