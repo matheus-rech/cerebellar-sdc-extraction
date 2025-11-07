@@ -3,7 +3,7 @@
 
 # Core Dependencies
 flask==3.0.0
-flask-cors==4.0.0
+flask-cors==6.0.0
 anthropic==0.72.0  # Citations work with search_result mode (Files API not yet in released SDK)
 
 # PDF Processing - Using Marker (primary) + pdfplumber (advanced features)
@@ -11,7 +11,7 @@ marker-pdf==1.10.1
 pypdfium2==4.30.0  # Required by Marker
 PyPDF2==3.0.1
 pdf2image==1.16.3
-Pillow==10.2.0
+Pillow==10.3.0
 pdfplumber==0.11.0  # Re-added for advanced table extraction and character-level coordinates
 pytesseract==0.3.10  # OCR fallback for scanned PDFs
 PyMuPDF>=1.24.0  # For annotated PDF export with highlights
@@ -26,7 +26,7 @@ jsonschema==4.20.0
 
 # Utilities
 python-dotenv==1.0.0
-requests==2.31.0
+requests==2.32.4
 
 # Optional - For Advanced Features
 # numpy==1.24.3
