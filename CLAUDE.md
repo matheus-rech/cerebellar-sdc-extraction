@@ -162,6 +162,7 @@ Then reload the page in your browser.
 | `/api/extract/all` | POST | Extract all fields | `{success, extractions[], agents[]}` |
 | `/api/search` | POST | Search text in PDF | `{success, results[]}` |
 | `/api/export` | POST | Export results | `{ArticleMetadata, StudyPopulation, ...}` |
+| `/api/export/annotated-pdf` | POST | Export PDF with citation highlights | PDF file download |
 
 ### Citation-Enhanced Response Format
 
@@ -204,6 +205,241 @@ Then reload the page in your browser.
   },
   "mode": "search_result"
 }
+```
+
+## PDF Enhancement Features (v2.0.1)
+
+### Context Field Support
+
+The extraction system now supports the `context` field as per Anthropic's official citation patterns. This allows you to provide metadata that helps Claude understand the research paper but won't be directly cited.
+
+**Usage in marker_provenance_extractor.py**:
+```python
+extractor = MarkerProvenanceExtractor(pdf_path)
+
+# Add context for paper quality metadata
+context = "Publication: JAMA 2016. Study Type: Retrospective cohort. Sample: n=23. Quality: Newcastle-Ottawa Scale 7/9"
+
+search_results = extractor.get_search_results(
+    enable_citations=True,
+    context=context  # Optional context field
+)
+```
+
+**When to use context**:
+- Publication venue and date (e.g., "JAMA 2016")
+- Study type (e.g., "Randomized controlled trial")
+- Quality assessment scores (e.g., "Newcastle-Ottawa Scale 8/9")
+- Sample size warnings (e.g., "Small sample: n=15")
+- Data completeness notes (e.g., "Missing outcomes for 3 patients")
+
+The context field informs Claude's extraction but won't appear in citations, keeping citation text clean while improving extraction accuracy.
+
+### Annotated PDF Export
+
+Export PDFs with permanent yellow highlights at citation locations using PyMuPDF. This creates a downloadable PDF with visual markers showing exactly where each extracted field was found.
+
+**API Endpoint**: `POST /api/export/annotated-pdf`
+
+**Request**:
+```json
+{
+  "session_id": "abc123...",
+  "extractions": [
+    {
+      "field": "title",
+      "value": "...",
+      "bounding_box": {
+        "x0": 72, "y0": 150, "x1": 523, "y1": 180, "page": 1
+      }
+    }
+  ]
+}
+```
+
+**Response**: PDF file download with yellow highlights
+
+**Implementation** (api_server.py:335-411):
+- Opens PDF with PyMuPDF (fitz)
+- Iterates through extractions with bounding boxes
+- Adds yellow highlight annotations at each location
+- Saves and returns annotated PDF
+
+**Use Cases**:
+- Share extraction provenance with collaborators
+- Verify extraction accuracy visually
+- Create annotated datasets for training
+- Documentation and audit trails
+
+### Advanced PDF Processing
+
+The system includes comprehensive PDF processing capabilities via `pdf_enhancements.py` (634 lines) following Anthropic's best practices.
+
+#### PDFEnhancer Class
+
+**PDF Rendering for Visual Analysis**:
+```python
+from pdf_enhancements import PDFEnhancer
+
+with PDFEnhancer(pdf_path) as enhancer:
+    # Render pages to images for Claude visual analysis
+    images = enhancer.render_pages_to_images(
+        pages=[1, 2, 3],  # Specific pages
+        dpi=200,  # Quality (150-600)
+        max_width=1920,   # Optional size limits
+        max_height=1080
+    )
+    # Returns list of PIL Image objects
+```
+
+**Advanced Table Extraction**:
+```python
+# Extract tables with custom pdfplumber settings
+tables = enhancer.extract_tables_advanced(
+    page_num=5,
+    table_settings={
+        "vertical_strategy": "lines",
+        "horizontal_strategy": "lines",
+        "snap_tolerance": 3
+    },
+    return_debug_images=True  # Visual debugging
+)
+# Returns: (table_data, debug_images) if debug enabled
+```
+
+**Image Extraction**:
+```python
+# Extract embedded images from PDF
+images = enhancer.extract_images(
+    page_num=2,  # Specific page or None for all
+    min_width=50,
+    min_height=50
+)
+# Returns list of PIL Image objects
+```
+
+**OCR Fallback for Scanned PDFs**:
+```python
+# Detect if PDF is scanned
+is_scanned = enhancer.is_scanned_pdf()
+
+# Extract text with automatic OCR fallback
+text = enhancer.extract_text_with_ocr_fallback(
+    page_num=1,
+    force_ocr=False  # Auto-detect if OCR needed
+)
+```
+
+**Character-Level Coordinates**:
+```python
+# Get precise character-level coordinates
+chars = enhancer.get_character_level_coords(
+    page_num=1,
+    search_text="mortality rate"  # Optional filter
+)
+# Returns list of dicts with 'char', 'x0', 'y0', 'x1', 'y1'
+```
+
+**Bounding Box Validation**:
+```python
+# Validate and merge bounding boxes
+validated = PDFEnhancer.validate_bounding_boxes(
+    boxes=[bbox1, bbox2, bbox3],
+    page_width=612,
+    page_height=792,
+    allow_intersections=False,
+    min_area=10.0
+)
+# Returns: (valid_boxes, invalid_boxes, warnings)
+```
+
+### Command-Line PDF Utilities
+
+The `pdf_utils/` directory provides three command-line utilities:
+
+#### 1. pdf_to_images.py - Convert PDFs to Images
+
+```bash
+# Convert all pages at 200 DPI
+python pdf_utils/pdf_to_images.py input.pdf output_images/
+
+# Convert specific pages at higher DPI
+python pdf_utils/pdf_to_images.py input.pdf output_images/ --pages 1,2,3 --dpi 300
+
+# Limit image dimensions
+python pdf_utils/pdf_to_images.py input.pdf output_images/ --max-width 1920 --max-height 1080
+
+# Save as JPEG instead of PNG
+python pdf_utils/pdf_to_images.py input.pdf output_images/ --format JPEG
+```
+
+#### 2. extract_tables.py - Extract Tables from PDFs
+
+```bash
+# Extract all tables from PDF
+python pdf_utils/extract_tables.py input.pdf
+
+# Extract from specific page with debug images
+python pdf_utils/extract_tables.py input.pdf --page 1 --show-debug
+
+# Save tables as JSON
+python pdf_utils/extract_tables.py input.pdf --json-output tables.json
+
+# Custom output directory
+python pdf_utils/extract_tables.py input.pdf --output-dir my_tables/
+```
+
+**Output**:
+- CSV files: `pageN_tableM.csv` - Table data
+- Debug images: `pageN_tableM_debug.png` - Visual table structure
+- JSON: All tables with metadata
+
+#### 3. pdf_info.py - PDF Analysis
+
+```bash
+# Basic analysis
+python pdf_utils/pdf_info.py input.pdf
+
+# Check if PDF is scanned (needs OCR)
+python pdf_utils/pdf_info.py input.pdf --check-scanned
+
+# Save analysis as JSON
+python pdf_utils/pdf_info.py input.pdf --output info.json
+```
+
+**Output Information**:
+- Total pages, characters, images, tables
+- Per-page dimensions and content statistics
+- Scanned PDF detection (when --check-scanned used)
+
+### DPI Selection Guidelines
+
+- **150 DPI**: Fast, good for text-heavy pages
+- **200 DPI**: Balanced quality/performance (default)
+- **300 DPI**: High quality for figures/diagrams
+- **600 DPI**: Maximum quality, slow
+
+### Integration Examples
+
+**Extract and Render Tables**:
+```bash
+# Extract outcome tables from medical paper
+python pdf_utils/extract_tables.py Kim2016.pdf --page 5 --show-debug --output-dir kim_tables/
+# Result: CSV files with mortality and mRS scores + debug images
+```
+
+**Prepare Pages for Claude Visual Analysis**:
+```bash
+# Convert first 3 pages to images
+python pdf_utils/pdf_to_images.py paper.pdf claude_images/ --pages 1,2,3 --dpi 150
+# Claude can now analyze these images for figures, diagrams, etc.
+```
+
+**Check if PDF Needs OCR**:
+```bash
+# Detect scanned PDFs
+python pdf_utils/pdf_info.py unknown.pdf --check-scanned
+# If scanned: use enhancer.extract_text_with_ocr_fallback()
 ```
 
 ## Development Workflow
@@ -323,11 +559,16 @@ class ExtractionResult:
 All defined in `requirements.txt`:
 - **Flask 3.0.0** + flask-cors: Web server
 - **anthropic 0.72.0**: Claude API client with citation support
-- **marker-pdf 1.10.1**: Privacy-preserving PDF extraction
+- **marker-pdf 1.10.1**: Privacy-preserving PDF extraction with section detection
 - **pypdfium2 4.30.0**: PDF rendering
-- **PyPDF2, pdf2image, Pillow 12.0.0**: PDF processing utilities
-- **jsonschema**: Schema validation
-- **python-dotenv**: Environment variable loading
+- **PyPDF2 3.0.1**: PDF manipulation utilities
+- **pdf2image 1.16.3**: PDF to image conversion
+- **Pillow 10.2.0**: Image processing
+- **pdfplumber 0.11.0**: Advanced table extraction and character-level coordinates
+- **pytesseract 0.3.10**: OCR fallback for scanned PDFs
+- **PyMuPDF 1.24.0**: Annotated PDF export with highlights
+- **jsonschema 4.20.0**: Schema validation
+- **python-dotenv 1.0.0**: Environment variable loading
 
 ## Performance Metrics
 
@@ -518,6 +759,18 @@ This system is related to the Medical Research Multi-Agent System in the global 
 - Demonstrates production-ready citation integration that can be adopted by other extraction systems
 
 ## Version History
+
+- **v2.0.1** (2025-11-06): PDF Enhancement Update
+  - Context field support for non-citable metadata (Anthropic official pattern)
+  - PyMuPDF annotated PDF export with yellow highlights
+  - Advanced PDF processing module (pdf_enhancements.py, 634 lines)
+  - PDF to image conversion for visual analysis
+  - Enhanced table extraction with pdfplumber
+  - OCR fallback for scanned PDFs
+  - Character-level coordinate precision
+  - Bounding box validation utilities
+  - Three command-line utilities (pdf_to_images, extract_tables, pdf_info)
+  - Complete alignment with Anthropic PDF best practices
 
 - **v2.0.0 Pro** (2025-11-06): Production-ready with full citation system
   - Claude Citations API integration

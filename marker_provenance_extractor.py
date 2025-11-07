@@ -265,7 +265,7 @@ class MarkerProvenanceExtractor:
             return self.metadata['page_stats']
         return []
 
-    def get_search_results(self, enable_citations: bool = True) -> List[Dict]:
+    def get_search_results(self, enable_citations: bool = True, context: str = None) -> List[Dict]:
         """
         Convert Marker sections to Claude search_result blocks.
 
@@ -275,12 +275,21 @@ class MarkerProvenanceExtractor:
 
         Args:
             enable_citations: Enable citation tracking for these results
+            context: Optional context string with metadata (e.g., publication date,
+                    study type, quality notes). This information helps Claude but
+                    won't be directly cited. Follows Anthropic's official pattern.
 
         Returns:
             List of search_result dict blocks ready for Claude API
 
         Example:
+            # Basic usage
             search_results = extractor.get_search_results()
+
+            # With context for paper quality metadata
+            context = "Publication: JAMA 2016. Study Type: Retrospective cohort. Sample: n=23"
+            search_results = extractor.get_search_results(context=context)
+
             response = client.messages.create(
                 model="claude-sonnet-4-5",
                 messages=[{
@@ -296,7 +305,7 @@ class MarkerProvenanceExtractor:
 
         if not sections:
             # Fallback: create single search result with full text
-            return [{
+            result = {
                 "type": "search_result",
                 "source": f"file://{self.pdf_path}",
                 "title": "Full Document",
@@ -305,7 +314,10 @@ class MarkerProvenanceExtractor:
                     "text": self.full_text or self.markdown_text
                 }],
                 "citations": {"enabled": enable_citations}
-            }]
+            }
+            if context:
+                result["context"] = context
+            return [result]
 
         # Convert each section to search_result block
         search_results = []
@@ -322,7 +334,7 @@ class MarkerProvenanceExtractor:
                     end_idx = min(title_idx + 2000, len(self.markdown_text))
                     section_text = self.markdown_text[title_idx:end_idx]
 
-            search_results.append({
+            result = {
                 "type": "search_result",
                 "source": f"file://{self.pdf_path}#page={section['page']}",
                 "title": section['title'],
@@ -331,7 +343,10 @@ class MarkerProvenanceExtractor:
                     "text": section_text
                 }],
                 "citations": {"enabled": enable_citations}
-            })
+            }
+            if context:
+                result["context"] = context
+            search_results.append(result)
 
         return search_results
 

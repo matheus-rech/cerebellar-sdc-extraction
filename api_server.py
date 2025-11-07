@@ -332,17 +332,95 @@ def export_data():
     
     return jsonify(export_obj)
 
+@app.route('/api/export/annotated-pdf', methods=['POST'])
+def export_annotated_pdf():
+    """Export PDF with citation highlights using PyMuPDF"""
+    import fitz  # PyMuPDF
+
+    data = request.json
+    session_id = data.get('session_id')
+    extractions = data.get('extractions', [])
+
+    if not session_id or session_id not in pdf_extractors:
+        return jsonify({"error": "Invalid session"}), 400
+
+    extractor = pdf_extractors[session_id]
+
+    try:
+        # Get original PDF path
+        pdf_path = extractor.pdf_path
+
+        # Open PDF with PyMuPDF
+        doc = fitz.open(pdf_path)
+
+        # Track statistics
+        highlights_added = 0
+
+        # Add highlights for each extraction with bounding box
+        for extraction in extractions:
+            bbox_data = extraction.get('bounding_box')
+            if not bbox_data:
+                continue
+
+            page_num = bbox_data.get('page', 1) - 1  # Convert to 0-indexed
+
+            # Validate page number
+            if page_num < 0 or page_num >= len(doc):
+                continue
+
+            page = doc[page_num]
+
+            # Create fitz.Rect from bounding box coordinates
+            # PDF coordinates: (x0, y0, x1, y1)
+            rect = fitz.Rect(
+                bbox_data['x0'],
+                bbox_data['y0'],
+                bbox_data['x1'],
+                bbox_data['y1']
+            )
+
+            # Add yellow highlight annotation
+            highlight = page.add_highlight_annot(rect)
+            highlight.set_colors({"stroke": (1, 1, 0)})  # Yellow (RGB)
+            highlight.update()
+
+            highlights_added += 1
+
+        # Save annotated PDF to temporary file
+        temp_dir = Path(tempfile.gettempdir()) / "cerebellar_extraction" / session_id
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        output_filename = f"annotated_{Path(pdf_path).name}"
+        output_path = temp_dir / output_filename
+
+        doc.save(str(output_path))
+        doc.close()
+
+        # Return the annotated PDF file
+        return send_file(
+            str(output_path),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=output_filename
+        )
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to create annotated PDF: {str(e)}"
+        }), 500
+
 @app.route('/api/cleanup', methods=['POST'])
 def cleanup():
     """Clean up session resources"""
     data = request.json
     session_id = data.get('session_id')
-    
+
     if session_id in pdf_extractors:
         pdf_extractors[session_id].close()
         del pdf_extractors[session_id]
         del extraction_systems[session_id]
-    
+
     return jsonify({"success": True})
 
 if __name__ == '__main__':
@@ -355,6 +433,7 @@ if __name__ == '__main__':
     print("  POST /api/extract/all - Extract all fields")
     print("  POST /api/search - Search in PDF")
     print("  POST /api/export - Export data")
+    print("  POST /api/export/annotated-pdf - Export PDF with highlights")
     print("=" * 60)
-    
+
     app.run(debug=True, port=5000)
